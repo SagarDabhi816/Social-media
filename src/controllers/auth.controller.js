@@ -1,14 +1,9 @@
 const userModel = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-
-async function testController(req,res) {
-    await console.log("working")
-     await res.send("yeahhh");
-}
-
-async function registerController(req,res) {
-    const { username, password } = req.body;
+async function registerController(req, res) {
+  const { username, password } = req.body;
 
   const isRegistered = await userModel.findOne({ username });
 
@@ -21,7 +16,7 @@ async function registerController(req,res) {
   try {
     const user = await userModel.create({
       username: username,
-      password: password,
+      password: await bcrypt.hash(password, 10),
     });
 
     const token = jwt.sign(
@@ -40,8 +35,8 @@ async function registerController(req,res) {
   }
 }
 
-async function loginController(req,res) {
-    const { username, password } = req.body;
+async function loginController(req, res) {
+  const { username, password } = req.body;
 
   const userExists = await userModel.findOne({ username });
 
@@ -50,7 +45,7 @@ async function loginController(req,res) {
       message: "User does not exists please register",
     });
   }
-  const isPasswordValid = userExists.password === password
+  const isPasswordValid = await bcrypt.compare(password, userExists.password);
 
   if (!isPasswordValid) {
     return res.status(409).json({
@@ -59,28 +54,23 @@ async function loginController(req,res) {
   }
 
   const token = jwt.sign(
-      {
-        id: userExists._id,
-      },
-      process.env.JWT_SECRET,
-    );
+    {
+      id: userExists._id,
+    },
+    process.env.JWT_SECRET,
+  );
 
-    res.cookie("token", token);
+  res.cookie("token", token);
 
   res.status(200).json({
     message: "Logged In successfully",
   });
-
 }
 
-async function logoutController(params) {
-    
-    
-}
+async function logoutController(req, res) {}
 
 module.exports = {
-    testController,
-    registerController,
-    loginController,
-    logoutController
-}
+  registerController,
+  loginController,
+  logoutController,
+};

@@ -1,7 +1,7 @@
  const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
 
- async function authMiddleware(req, res) {
+ async function authMiddleware(req, res,next) {
   const token = req.cookies.token;
 
   if (!token) {
@@ -12,12 +12,16 @@ const userModel = require("../models/user.model");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    
     const user = await userModel.findOne({
-      _id: decoded.id,
+      _id: decoded.id
     });
+
+    req.user = user;
+    // console.log("working",user)
+
     next()
-    req.user = user
+    
   } catch (error) {
     return res.status(401).json({
       message: "Invalid token , please login again",

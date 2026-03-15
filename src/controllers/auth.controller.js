@@ -67,10 +67,7 @@ async function loginController(req, res) {
   });
 }
 
-async function logoutController(req, res) {}
-
 module.exports = {
   registerController,
   loginController,
-  logoutController,
 };
